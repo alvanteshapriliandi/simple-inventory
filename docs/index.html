@@ -1,0 +1,817 @@
+<!doctype html>
+<html lang="id">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f5f7fb">
+    <title>Dokumentasi Simple Inventory</title>
+    <style>
+        :root {
+            color-scheme: light;
+        }
+
+        * { box-sizing: border-box; }
+
+        html { scroll-behavior: smooth; scroll-padding-top: 95px; }
+
+        body {
+            min-width: 320px;
+            margin: 0;
+            color: #1d2939;
+            background: #f5f7fb;
+            font: 15px/1.65 Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+
+        a { color: #3978e8; }
+
+        .topbar {
+            position: sticky;
+            z-index: 5;
+            top: 0;
+            display: flex;
+            min-height: 66px;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 max(24px, calc((100vw - 1200px) / 2));
+            border-bottom: 1px solid #e5eaf1;
+            background: rgba(255, 255, 255, .94);
+            backdrop-filter: blur(12px);
+        }
+
+        .brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            color: #1d2939;
+            font-size: 15px;
+            font-weight: 750;
+            text-decoration: none;
+        }
+
+        .brand-mark {
+            display: grid;
+            width: 34px;
+            height: 34px;
+            place-items: center;
+            border-radius: 9px;
+            color: white;
+            background: #3978e8;
+            font-size: 17px;
+        }
+
+        .topbar-note { color: #667085; font-size: 12px; }
+
+        .layout {
+            display: grid;
+            width: min(1200px, 100%);
+            grid-template-columns: 220px minmax(0, 1fr);
+            gap: 42px;
+            margin: 0 auto;
+            padding: 38px 24px 80px;
+        }
+
+        .toc {
+            position: sticky;
+            top: 92px;
+            align-self: start;
+            padding: 18px 0;
+        }
+
+        .toc-title {
+            margin: 0 0 10px;
+            color: #98a2b3;
+            font-size: 10px;
+            font-weight: 750;
+            letter-spacing: 1.1px;
+        }
+
+        .toc a {
+            display: block;
+            padding: 7px 10px;
+            border-left: 2px solid transparent;
+            color: #667085;
+            font-size: 12px;
+            text-decoration: none;
+        }
+
+        .toc a:hover {
+            border-left-color: #3978e8;
+            color: #3978e8;
+            background: #eef4ff;
+        }
+
+        main { min-width: 0; }
+
+        .hero {
+            padding: 32px;
+            margin-bottom: 22px;
+            border: 1px solid #e4ebf6;
+            border-radius: 16px;
+            background:
+                radial-gradient(circle at 90% 15%, rgba(57, 120, 232, .11), transparent 34%),
+                #fff;
+            box-shadow: 0 5px 20px rgba(35, 54, 82, .035);
+        }
+
+        .eyebrow {
+            margin: 0 0 8px;
+            color: #3978e8;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 1.3px;
+        }
+
+        h1, h2, h3, p { margin-top: 0; }
+
+        h1 {
+            margin-bottom: 10px;
+            font-size: clamp(29px, 5vw, 42px);
+            letter-spacing: -1.5px;
+            line-height: 1.15;
+        }
+
+        .hero > p:last-of-type {
+            max-width: 680px;
+            margin-bottom: 19px;
+            color: #667085;
+        }
+
+        .pills { display: flex; flex-wrap: wrap; gap: 8px; }
+
+        .pill {
+            padding: 4px 10px;
+            border: 1px solid #e5eaf1;
+            border-radius: 20px;
+            color: #526179;
+            background: #fff;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .callout {
+            padding: 13px 15px;
+            margin: 16px 0;
+            border: 1px solid #dce8fc;
+            border-left: 3px solid #3978e8;
+            border-radius: 7px;
+            color: #45546a;
+            background: #f5f8ff;
+            font-size: 13px;
+        }
+
+        .callout.warning {
+            border-color: #f6e5bb;
+            border-left-color: #e6a32d;
+            background: #fffaf0;
+        }
+
+        .doc-section {
+            padding: 26px 28px;
+            margin-bottom: 17px;
+            border: 1px solid #e5eaf1;
+            border-radius: 13px;
+            background: #fff;
+            box-shadow: 0 3px 12px rgba(35, 54, 82, .025);
+        }
+
+        .section-number {
+            display: inline-grid;
+            width: 25px;
+            height: 25px;
+            place-items: center;
+            margin-right: 7px;
+            border-radius: 7px;
+            color: #3978e8;
+            background: #eef4ff;
+            font-size: 12px;
+            vertical-align: 2px;
+        }
+
+        h2 {
+            margin-bottom: 13px;
+            font-size: 20px;
+            font-weight: 720;
+            letter-spacing: -.4px;
+        }
+
+        h3 {
+            margin: 22px 0 8px;
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .doc-section > p, .doc-section li { color: #526179; }
+
+        .doc-section ol, .doc-section ul { padding-left: 22px; }
+        .doc-section li + li { margin-top: 5px; }
+
+        .file-list {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 9px;
+            padding: 0 !important;
+            list-style: none;
+        }
+
+        .file-list li {
+            padding: 11px 12px;
+            border: 1px solid #edf0f5;
+            border-radius: 8px;
+            background: #fbfcfe;
+            font-size: 12px;
+        }
+
+        .file-list code { color: #2866d3; font-weight: 700; }
+
+        .code-wrap {
+            overflow: hidden;
+            margin: 12px 0 18px;
+            border: 1px solid #26334a;
+            border-radius: 9px;
+            background: #172235;
+        }
+
+        .code-head {
+            display: flex;
+            min-height: 39px;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 11px 0 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, .09);
+            color: #aab8cd;
+            font: 11px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+        }
+
+        .copy-button {
+            padding: 5px 9px;
+            border: 1px solid rgba(255, 255, 255, .17);
+            border-radius: 6px;
+            color: #e7eefb;
+            background: rgba(255, 255, 255, .06);
+            cursor: pointer;
+            font: inherit;
+        }
+
+        .copy-button:hover { background: rgba(255, 255, 255, .14); }
+
+        pre {
+            overflow: auto;
+            max-height: 560px;
+            padding: 16px;
+            margin: 0;
+            color: #d7e1ef;
+            font: 12px/1.7 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            tab-size: 4;
+        }
+
+        .token-keyword { color: #c792ea; }
+        .token-type { color: #82aaff; }
+        .token-string { color: #c3e88d; }
+        .token-number { color: #f78c6c; }
+        .token-comment { color: #7f91a8; font-style: italic; }
+        .token-function { color: #82d8d8; }
+        .token-constant { color: #ffcb6b; }
+        .token-operator { color: #89ddff; }
+        .token-tag { color: #f07178; }
+        .token-interpolation { color: #c792ea; }
+
+        code.inline {
+            padding: 2px 5px;
+            border-radius: 4px;
+            color: #315fa6;
+            background: #eff4fc;
+            font: 12px ui-monospace, SFMono-Regular, Menlo, monospace;
+        }
+
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+            margin: 16px 0;
+        }
+
+        .step {
+            padding: 13px;
+            border: 1px solid #edf0f5;
+            border-radius: 9px;
+            color: #667085;
+            background: #fbfcfe;
+            font-size: 12px;
+        }
+
+        .step strong {
+            display: block;
+            margin-bottom: 4px;
+            color: #344054;
+        }
+
+        .footer {
+            padding: 18px 0 0;
+            color: #98a2b3;
+            text-align: center;
+            font-size: 11px;
+        }
+
+        @media (max-width: 760px) {
+            .topbar { min-height: 58px; padding: 0 16px; }
+            .topbar-note { font-size: 10px; }
+            .layout { display: block; padding: 18px 14px 45px; }
+            .toc {
+                position: static;
+                display: flex;
+                overflow-x: auto;
+                gap: 4px;
+                padding: 0 0 13px;
+                margin: 0 -2px;
+            }
+            .toc-title { display: none; }
+            .toc a {
+                flex: 0 0 auto;
+                padding: 6px 9px;
+                border: 1px solid #e5eaf1;
+                border-radius: 20px;
+                background: #fff;
+                font-size: 10px;
+            }
+            .toc a:hover { border-color: #b7cff8; }
+            .hero { padding: 23px 20px; }
+            .doc-section { padding: 21px 18px; }
+            .steps { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 440px) {
+            .brand { font-size: 13px; }
+            .brand-mark { width: 30px; height: 30px; }
+            .topbar-note { max-width: 105px; text-align: right; }
+            .file-list { grid-template-columns: 1fr; }
+            pre { font-size: 11px; }
+        }
+    </style>
+</head>
+<body>
+    <header class="topbar">
+        <a class="brand" href="../index.html">
+            <span class="brand-mark" aria-hidden="true">▦</span>
+            <span>Simple Inventory <span style="color:#7b8798;font-weight:500">/ Dokumentasi</span></span>
+        </a>
+        <a class="topbar-note" href="../index.html">← Kembali ke aplikasi</a>
+    </header>
+
+    <div class="layout">
+        <nav class="toc" aria-label="Daftar isi">
+            <p class="toc-title">PANDUAN</p>
+            <a href="#mulai">Mulai</a>
+            <a href="#supabase">Supabase & SQL</a>
+            <a href="#konfigurasi">Konfigurasi</a>
+            <a href="#autentikasi">Autentikasi</a>
+            <a href="#crud">CRUD inventaris</a>
+            <a href="#vue">Vue 3</a>
+            <a href="#admin">Akun admin</a>
+            <a href="#jalankan">Menjalankan</a>
+            <a href="#masalah">Troubleshooting</a>
+        </nav>
+
+        <main>
+            <section class="hero">
+                <p class="eyebrow">PANDUAN PENGEMBANGAN</p>
+                <h1>Belajar Simple Inventory</h1>
+                <p>Dokumentasi ringkas untuk memahami project, menghubungkan Supabase, dan mencoba contoh kode. Tekan tombol <strong>Salin kode</strong> pada blok untuk menyalin contoh.</p>
+                <div class="pills">
+                    <span class="pill">HTML & CSS</span>
+                    <span class="pill">Vue 3 Composition API</span>
+                    <span class="pill">Supabase</span>
+                    <span class="pill">Tanpa npm / build tools</span>
+                </div>
+            </section>
+
+            <section class="doc-section" id="mulai">
+                <h2><span class="section-number">1</span>Kenali struktur project</h2>
+                <p>Aplikasi menggunakan JavaScript module native di browser. Setiap file punya satu tanggung jawab supaya alur program lebih mudah dipresentasikan.</p>
+                <ul class="file-list">
+                    <li><code>index.html</code>: struktur halaman dan CDN Vue, Supabase, Bootstrap.</li>
+                    <li><code>style.css</code>: tampilan dashboard dan komponen.</li>
+                    <li><code>app.js</code>: menghubungkan modul dan memasang aplikasi Vue.</li>
+                    <li><code>supabase.js</code>: URL, public key, dan Supabase client.</li>
+                    <li><code>auth.js</code>: login, daftar, sesi, serta profil dan role.</li>
+                    <li><code>inventory.js</code>: mengambil dan mengubah data barang.</li>
+                    <li><code>docs/index.html</code>: halaman dokumentasi yang sedang dibuka.</li>
+                </ul>
+                <div class="callout">Contoh di halaman ini adalah potongan pembelajaran. File project yang sudah ada menggabungkan potongan-potongan ini ke dalam modul.</div>
+            </section>
+
+            <section class="doc-section" id="supabase">
+                <h2><span class="section-number">2</span>Buat project Supabase dan tabel</h2>
+                <ol>
+                    <li>Buat project di <a href="https://supabase.com/" target="_blank" rel="noreferrer">supabase.com</a>.</li>
+                    <li>Buka <strong>SQL Editor → New query</strong>, tempel SQL di bawah, lalu tekan <strong>Run</strong>.</li>
+                    <li>SQL membuat tabel profil/barang, membuat profil otomatis saat user mendaftar, dan membatasi akses melalui RLS.</li>
+                </ol>
+                <div class="code-wrap">
+                    <div class="code-head"><span>SQL · jalankan di Supabase SQL Editor</span><button class="copy-button" type="button">Salin kode</button></div>
+                    <pre><code>create table if not exists public.profiles (
+    id uuid primary key references auth.users(id) on delete cascade,
+    full_name text,
+    role text not null default 'user' check (role in ('admin', 'user')),
+    created_at timestamptz not null default now()
+);
+
+create table if not exists public.items (
+    id uuid primary key default gen_random_uuid(),
+    name text not null,
+    category text not null,
+    stock integer not null default 0 check (stock &gt;= 0),
+    unit text not null,
+    created_at timestamptz not null default now()
+);
+
+/* Profil baru otomatis dibuat ketika akun Auth berhasil mendaftar. */
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $$
+begin
+    insert into public.profiles (id, full_name, role)
+    values (
+        new.id,
+        coalesce(new.raw_user_meta_data -&gt;&gt; 'full_name', new.email),
+        'user'
+    )
+    on conflict (id) do update
+        set full_name = excluded.full_name;
+    return new;
+end;
+$$;
+
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+after insert on auth.users
+for each row execute function public.handle_new_user();
+
+/* Role diperiksa di database; menyembunyikan tombol di UI saja bukan keamanan. */
+create or replace function public.current_user_role()
+returns text
+language sql
+stable
+security definer
+set search_path = public, pg_temp
+as $$
+    select p.role from public.profiles p where p.id = auth.uid()
+$$;
+
+revoke all on function public.current_user_role() from public;
+grant execute on function public.current_user_role() to authenticated;
+grant usage on schema public to authenticated;
+grant select on public.profiles to authenticated;
+grant select, insert, update, delete on public.items to authenticated;
+
+alter table public.profiles enable row level security;
+alter table public.items enable row level security;
+
+drop policy if exists "profiles_read_own" on public.profiles;
+create policy "profiles_read_own"
+on public.profiles for select to authenticated
+using (id = auth.uid());
+
+drop policy if exists "items_read_authenticated" on public.items;
+create policy "items_read_authenticated"
+on public.items for select to authenticated
+using (true);
+
+drop policy if exists "items_insert_admin" on public.items;
+create policy "items_insert_admin"
+on public.items for insert to authenticated
+with check (public.current_user_role() = 'admin');
+
+drop policy if exists "items_update_admin" on public.items;
+create policy "items_update_admin"
+on public.items for update to authenticated
+using (public.current_user_role() = 'admin')
+with check (public.current_user_role() = 'admin');
+
+drop policy if exists "items_delete_admin" on public.items;
+create policy "items_delete_admin"
+on public.items for delete to authenticated
+using (public.current_user_role() = 'admin');</code></pre>
+                </div>
+                <div class="callout warning"><strong>Penting:</strong> RLS harus aktif. Admin dapat mengelola barang, sedangkan semua user yang sudah login hanya dapat membaca barang. Profil hanya dapat dibaca oleh pemilik akun.</div>
+            </section>
+
+            <section class="doc-section" id="konfigurasi">
+                <h2><span class="section-number">3</span>Hubungkan aplikasi ke Supabase</h2>
+                <ol>
+                    <li>Di dashboard Supabase, buka <strong>Project Settings → API</strong> (atau bagian API keys).</li>
+                    <li>Salin Project URL dan <strong>publishable key</strong> (atau anon key lama).</li>
+                    <li>Ganti nilai contoh pada <code class="inline">supabase.js</code>.</li>
+                </ol>
+                <div class="code-wrap">
+                    <div class="code-head"><span>JavaScript · supabase.js</span><button class="copy-button" type="button">Salin kode</button></div>
+                    <pre><code>// Publishable/anon key boleh digunakan di browser jika RLS sudah benar.
+// Jangan gunakan service_role key di frontend.
+const SUPABASE_URL = 'https://PROJECT-ID.supabase.co';
+const SUPABASE_ANON_KEY = 'PASTE_PUBLISHABLE_OR_ANON_KEY_HERE';
+
+const supabaseClient = window.supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY
+);</code></pre>
+                </div>
+                <p>Key frontend bukan pengganti akses kontrol. Perlindungan database harus datang dari RLS dan kebijakan yang benar.</p>
+            </section>
+
+            <section class="doc-section" id="autentikasi">
+                <h2><span class="section-number">4</span>Contoh autentikasi</h2>
+                <h3>Daftar akun</h3>
+                <div class="code-wrap">
+                    <div class="code-head"><span>JavaScript · Auth signup</span><button class="copy-button" type="button">Salin kode</button></div>
+                    <pre><code>const { data, error } = await supabaseClient.auth.signUp({
+    email: 'siswa@example.com',
+    password: 'password-yang-kuat',
+    options: {
+        data: { full_name: 'Nama Siswa' }
+    }
+});
+
+if (error) {
+    console.error('Pendaftaran gagal:', error.message);
+} else if (!data.session) {
+    // Jika konfirmasi email aktif, user perlu konfirmasi sebelum login.
+    console.log('Periksa email untuk konfirmasi akun.');
+} else {
+    console.log('Akun berhasil dibuat.');
+}</code></pre>
+                </div>
+                <h3>Login, session persistence, dan logout</h3>
+                <div class="code-wrap">
+                    <div class="code-head"><span>JavaScript · Auth session</span><button class="copy-button" type="button">Salin kode</button></div>
+                    <pre><code>const { data, error } = await supabaseClient.auth.signInWithPassword({
+    email: 'siswa@example.com',
+    password: 'password-yang-kuat'
+});
+
+if (error) {
+    console.error('Login gagal:', error.message);
+} else {
+    console.log('User aktif:', data.user.email);
+}
+
+// Supabase menyimpan sesi di browser. Periksa sesi ketika aplikasi dibuka.
+const { data: sessionData } = await supabaseClient.auth.getSession();
+console.log('Sesi aktif:', Boolean(sessionData.session));
+
+// Logout
+const { error: logoutError } = await supabaseClient.auth.signOut();
+if (logoutError) console.error('Logout gagal:', logoutError.message);</code></pre>
+                </div>
+            </section>
+
+            <section class="doc-section" id="crud">
+                <h2><span class="section-number">5</span>Contoh CRUD inventaris</h2>
+                <p>Semua operasi database menggunakan <code class="inline">async/await</code>. RLS tetap memeriksa role saat request sampai ke Supabase.</p>
+                <h3>Read: membaca barang</h3>
+                <div class="code-wrap">
+                    <div class="code-head"><span>JavaScript · SELECT</span><button class="copy-button" type="button">Salin kode</button></div>
+                    <pre><code>async function loadItems() {
+    const { data, error } = await supabaseClient
+        .from('items')
+        .select('id, name, category, stock, unit, created_at')
+        .order('created_at', { ascending: false });
+
+    if (error) {
+        console.error('Gagal memuat barang:', error.message);
+        return [];
+    }
+    return data;
+}</code></pre>
+                </div>
+                <h3>Create: menambahkan barang</h3>
+                <div class="code-wrap">
+                    <div class="code-head"><span>JavaScript · INSERT (khusus admin)</span><button class="copy-button" type="button">Salin kode</button></div>
+                    <pre><code>const barangBaru = {
+    name: 'Kertas A4',
+    category: 'ATK',
+    stock: 25,
+    unit: 'rim'
+};
+
+const { error } = await supabaseClient
+    .from('items')
+    .insert(barangBaru);
+
+if (error) console.error('Gagal menambah barang:', error.message);</code></pre>
+                </div>
+                <h3>Update dan Delete: mengubah atau menghapus barang</h3>
+                <div class="code-wrap">
+                    <div class="code-head"><span>JavaScript · UPDATE & DELETE (khusus admin)</span><button class="copy-button" type="button">Salin kode</button></div>
+                    <pre><code>// Update: selalu gunakan .eq() untuk menentukan barang yang diubah.
+const { error: updateError } = await supabaseClient
+    .from('items')
+    .update({ stock: 30 })
+    .eq('id', itemId);
+
+// Delete: pastikan id barang spesifik sebelum menghapus.
+const { error: deleteError } = await supabaseClient
+    .from('items')
+    .delete()
+    .eq('id', itemId);
+
+if (updateError || deleteError) {
+    console.error('Operasi gagal:', updateError?.message || deleteError?.message);
+}</code></pre>
+                </div>
+            </section>
+
+            <section class="doc-section" id="vue">
+                <h2><span class="section-number">6</span>Konsep Vue 3 yang digunakan</h2>
+                <p><code class="inline">ref()</code> menyimpan state reaktif. <code class="inline">computed()</code> menghitung nilai dari state; UI diperbarui ketika datanya berubah.</p>
+                <div class="code-wrap">
+                    <div class="code-head"><span>JavaScript · Composition API</span><button class="copy-button" type="button">Salin kode</button></div>
+                    <pre><code>const { ref, computed } = Vue;
+
+const items = ref([]);
+const searchQuery = ref('');
+
+const filteredItems = computed(() => {
+    const query = searchQuery.value.toLowerCase();
+    return items.value.filter(item =>
+        item.name.toLowerCase().includes(query)
+    );
+});
+
+const totalStock = computed(() =>
+    items.value.reduce((sum, item) => sum + Number(item.stock), 0)
+);</code></pre>
+                </div>
+                <div class="code-wrap">
+                    <div class="code-head"><span>HTML · binding Vue</span><button class="copy-button" type="button">Salin kode</button></div>
+                    <pre><code>&lt;input v-model="searchQuery" placeholder="Cari barang..."&gt;
+
+&lt;ul&gt;
+    &lt;li v-for="item in filteredItems" :key="item.id"&gt;
+        {{ item.name }}: {{ item.stock }} {{ item.unit }}
+    &lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Total stok: {{ totalStock }}&lt;/p&gt;</code></pre>
+                </div>
+            </section>
+
+            <section class="doc-section" id="admin">
+                <h2><span class="section-number">7</span>Membuat akun admin pertama</h2>
+                <ol>
+                    <li>Daftar akun dari halaman aplikasi. Trigger SQL akan membuat profil baru dengan role <code class="inline">user</code>.</li>
+                    <li>Di Supabase SQL Editor, jalankan query berikut dan ganti email contoh dengan email akun Anda.</li>
+                    <li>Keluar lalu masuk kembali agar aplikasi memuat role terbaru.</li>
+                </ol>
+                <div class="code-wrap">
+                    <div class="code-head"><span>SQL · jadikan admin</span><button class="copy-button" type="button">Salin kode</button></div>
+                    <pre><code>update public.profiles
+set role = 'admin'
+where id = (
+    select id
+    from auth.users
+    where email = 'email-admin-anda@example.com'
+);</code></pre>
+                </div>
+                <div class="callout warning">Jangan membuka pendaftaran role admin dari browser. Role awal ditetapkan database sebagai <code class="inline">user</code>; perubahan role dilakukan oleh operator tepercaya di Supabase.</div>
+            </section>
+
+            <section class="doc-section" id="jalankan">
+                <h2><span class="section-number">8</span>Jalankan project</h2>
+                <div class="steps">
+                    <div class="step"><strong>1 · Buka folder</strong>Buka folder Simple Inventory di Visual Studio Code.</div>
+                    <div class="step"><strong>2 · Live Server</strong>Klik kanan <code class="inline">index.html</code> → Open with Live Server.</div>
+                    <div class="step"><strong>3 · Dokumentasi</strong>Buka <code class="inline">docs/index.html</code> melalui Live Server untuk membaca panduan ini.</div>
+                </div>
+                <p>Live Server penting karena browser memuat <code class="inline">app.js</code> dan modul JavaScript lain menggunakan <code class="inline">import</code>. Membuka aplikasi sebagai file lokal (<code class="inline">file://</code>) dapat memblokir module imports.</p>
+            </section>
+
+            <section class="doc-section" id="masalah">
+                <h2><span class="section-number">9</span>Jika ada masalah</h2>
+                <ul>
+                    <li><strong>Login gagal:</strong> cek email/password, konfirmasi email, URL, dan public key Supabase.</li>
+                    <li><strong>Profil belum tersedia:</strong> pastikan trigger <code class="inline">on_auth_user_created</code> sudah dibuat; akun yang dibuat sebelum trigger mungkin perlu dibuat ulang atau profilnya dibuat dengan aman.</li>
+                    <li><strong>Tidak bisa menambah atau mengedit barang:</strong> cek kolom <code class="inline">profiles.role</code> dan pastikan role akun <code class="inline">admin</code>.</li>
+                    <li><strong>Permintaan ditolak Supabase:</strong> cek RLS, policy, dan grant tabel. Jangan mematikan RLS untuk mengatasi masalah.</li>
+                    <li><strong>Modul tidak ditemukan:</strong> jalankan lewat Live Server, bukan membuka file HTML dengan <code class="inline">file://</code>.</li>
+                </ul>
+            </section>
+
+            <footer class="footer">Simple Inventory · Dokumentasi untuk pembelajaran dan presentasi</footer>
+        </main>
+    </div>
+
+    <script>
+        const sqlKeywords = new Set(
+            'alter after as begin by cascade check coalesce create default delete drop enable execute exists for from function grant if insert into language not null on or order primary references replace revoke role security select set stable table then to trigger true update usage using values where with'.split(' ')
+        );
+        const sqlTypes = new Set(
+            'boolean integer text timestamp timestamptz trigger uuid'.split(' ')
+        );
+        const jsKeywords = new Set(
+            'async await const else export false finally function if import let new null return throw true try var'.split(' ')
+        );
+        const jsBuiltins = new Set(
+            'Boolean Error Number Promise Set Vue console window'.split(' ')
+        );
+        const tokenPattern = /\/\*[\s\S]*?\*\/|\/\/[^\n]*|"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`|\b\d+(?:\.\d+)?\b|\b[A-Za-z_$][\w$]*\b|[{}()[\].,:;=<>+*/!-]/g;
+
+        function escapeCode(text) {
+            return text.replace(/[&<>"]/g, (character) => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;'
+            })[character]);
+        }
+
+        function highlightCode(codeElement, language) {
+            const source = codeElement.textContent;
+            let highlighted = '';
+            let cursor = 0;
+
+            if (language === 'html') {
+                const htmlPattern = /<\/?[A-Za-z][^>]*>|{{[\s\S]*?}}/g;
+                for (const match of source.matchAll(htmlPattern)) {
+                    highlighted += escapeCode(source.slice(cursor, match.index));
+                    const kind = match[0].startsWith('{{') ? 'token-interpolation' : 'token-tag';
+                    highlighted += `<span class="${kind}">${escapeCode(match[0])}</span>`;
+                    cursor = match.index + match[0].length;
+                }
+                highlighted += escapeCode(source.slice(cursor));
+                codeElement.innerHTML = highlighted;
+                return;
+            }
+
+            for (const match of source.matchAll(tokenPattern)) {
+                const token = match[0];
+                const index = match.index;
+                highlighted += escapeCode(source.slice(cursor, index));
+
+                let kind = '';
+                if (token.startsWith('//') || token.startsWith('/*')) {
+                    kind = 'token-comment';
+                } else if (token.startsWith('"') || token.startsWith("'") || token.startsWith('`')) {
+                    kind = 'token-string';
+                } else if (/^\d/.test(token)) {
+                    kind = 'token-number';
+                } else if (/^[A-Za-z_$]/.test(token)) {
+                    const words = language === 'sql' ? sqlKeywords : jsKeywords;
+                    const types = language === 'sql' ? sqlTypes : jsBuiltins;
+                    const nextText = source.slice(index + token.length);
+                    if (words.has(token.toLowerCase()) && language === 'sql') {
+                        kind = 'token-keyword';
+                    } else if (words.has(token)) {
+                        kind = 'token-keyword';
+                    } else if (types.has(language === 'sql' ? token.toLowerCase() : token)) {
+                        kind = 'token-type';
+                    } else if (/^(true|false|null)$/.test(token)) {
+                        kind = 'token-constant';
+                    } else if (/^\s*\(/.test(nextText)) {
+                        kind = 'token-function';
+                    }
+                } else if (/^[{}()[\].,:;=<>+*/!-]$/.test(token)) {
+                    kind = 'token-operator';
+                }
+
+                const safeToken = escapeCode(token);
+                highlighted += kind ? `<span class="${kind}">${safeToken}</span>` : safeToken;
+                cursor = index + token.length;
+            }
+
+            highlighted += escapeCode(source.slice(cursor));
+            codeElement.innerHTML = highlighted;
+        }
+
+        document.querySelectorAll('.code-wrap').forEach((block) => {
+            const label = block.querySelector('.code-head span').textContent;
+            const language = label.startsWith('SQL')
+                ? 'sql'
+                : label.startsWith('HTML')
+                    ? 'html'
+                    : 'javascript';
+            highlightCode(block.querySelector('pre code'), language);
+        });
+
+        document.querySelectorAll('.copy-button').forEach((button) => {
+            button.addEventListener('click', async () => {
+                const code = button.closest('.code-wrap').querySelector('pre code').textContent;
+                const originalLabel = button.textContent;
+
+                try {
+                    await navigator.clipboard.writeText(code);
+                    button.textContent = 'Tersalin!';
+                } catch (error) {
+                    button.textContent = 'Gagal menyalin';
+                    console.error('Clipboard tidak tersedia:', error);
+                }
+
+                window.setTimeout(() => {
+                    button.textContent = originalLabel;
+                }, 1600);
+            });
+        });
+    </script>
+</body>
+</html>
