@@ -123,8 +123,10 @@ export function createAuthModule({ client, onAuthenticated, onSignedOut, pageErr
         }
 
         const { data: authData } = client.auth.onAuthStateChange((_event, session) => {
+            const nextUser = session?.user || null;
+            if (nextUser && profile.value && nextUser.id === currentUser.value?.id) return;
             // Menjalankan setelah callback auth selesai mencegah lock internal Supabase.
-            window.setTimeout(() => loadUserData(session?.user || null), 0);
+            window.setTimeout(() => loadUserData(nextUser), 0);
         });
         authSubscription = authData.subscription;
     });
