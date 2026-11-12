@@ -392,7 +392,7 @@
                     <li><code>style.css</code>: tampilan dashboard dan komponen.</li>
                     <li><code>app.js</code>: menghubungkan modul dan memasang aplikasi Vue.</li>
                     <li><code>supabase.js</code>: URL, public key, dan Supabase client.</li>
-                    <li><code>auth.js</code>: login, daftar, sesi, serta profil dan role.</li>
+                    <li><code>auth.js</code>: login, daftar, validasi form, sesi, serta profil dan role.</li>
                     <li><code>inventory.js</code>: mengambil dan mengubah data barang.</li>
                     <li><code>docs/index.html</code>: halaman dokumentasi yang sedang dibuka.</li>
                 </ul>
@@ -564,6 +564,36 @@ console.log('Sesi aktif:', Boolean(sessionData.session));
 const { error: logoutError } = await supabaseClient.auth.signOut();
 if (logoutError) console.error('Logout gagal:', logoutError.message);</code></pre>
                 </div>
+                <h3>Validasi form sebelum memanggil Supabase</h3>
+                <p>Form diperiksa lebih dulu agar request yang pasti gagal tidak dikirim ke server.</p>
+                <div class="code-wrap">
+                    <div class="code-head"><span>JavaScript · validasi form</span><button class="copy-button" type="button">Salin kode</button></div>
+                    <pre><code>const { fullName, email, password } = authForm.value;
+
+if (!email.trim() || !password) {
+    authError.value = 'Email dan kata sandi wajib diisi.';
+    return;
+}
+if (authMode.value === 'register') {
+    if (!fullName.trim()) {
+        authError.value = 'Nama lengkap wajib diisi.';
+        return;
+    }
+    if (password.length &lt; 6) {
+        authError.value = 'Kata sandi minimal 6 karakter.';
+        return;
+    }
+}</code></pre>
+                </div>
+                <h3>Alur modul auth.js</h3>
+                <ol>
+                    <li>Saat aplikasi dibuka, <code class="inline">getSession()</code> memeriksa sesi yang tersimpan.</li>
+                    <li><code class="inline">loadUserData()</code> mengambil <code class="inline">full_name</code> dan <code class="inline">role</code> dari tabel <code class="inline">profiles</code>.</li>
+                    <li>Jika berhasil, <code class="inline">onAuthenticated()</code> dipanggil. Jika profil gagal dimuat atau user keluar, <code class="inline">onSignedOut()</code> dipanggil agar data sesi sebelumnya tidak tertinggal.</li>
+                    <li><code class="inline">onAuthStateChange</code> memantau login dan logout berikutnya.</li>
+                    <li>Saat komponen dilepas, listener dihentikan dengan <code class="inline">unsubscribe()</code>. Flag <code class="inline">unmounted</code> mencegah listener terdaftar setelah itu.</li>
+                </ol>
+                <div class="callout"><code class="inline">loadRequestId</code> memastikan hanya permintaan profil terbaru yang dipakai, sehingga respons lama tidak menimpa data baru.</div>
             </section>
 
             <section class="doc-section" id="crud">
@@ -691,6 +721,8 @@ where id = (
                 <h2><span class="section-number">9</span>Jika ada masalah</h2>
                 <ul>
                     <li><strong>Login gagal:</strong> cek email/password, konfirmasi email, URL, dan public key Supabase.</li>
+                    <li><strong>Muncul "Email dan kata sandi wajib diisi" atau "Kata sandi minimal 6 karakter":</strong> ini validasi form di aplikasi, bukan error Supabase. Lengkapi form sesuai aturan.</li>
+                    <li><strong>Langsung keluar setelah login:</strong> profil gagal dimuat, sehingga <code class="inline">onSignedOut()</code> dipanggil. Cek tabel <code class="inline">profiles</code>, trigger <code class="inline">on_auth_user_created</code>, dan policy <code class="inline">profiles_read_own</code>.</li>
                     <li><strong>Profil belum tersedia:</strong> pastikan trigger <code class="inline">on_auth_user_created</code> sudah dibuat; akun yang dibuat sebelum trigger mungkin perlu dibuat ulang atau profilnya dibuat dengan aman.</li>
                     <li><strong>Tidak bisa menambah atau mengedit barang:</strong> cek kolom <code class="inline">profiles.role</code> dan pastikan role akun <code class="inline">admin</code>.</li>
                     <li><strong>Permintaan ditolak Supabase:</strong> cek RLS, policy, dan grant tabel. Jangan mematikan RLS untuk mengatasi masalah.</li>
