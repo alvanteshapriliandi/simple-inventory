@@ -15,6 +15,7 @@ export function createAuthModule({ client, onAuthenticated, onSignedOut, pageErr
     const profileError = ref('');
     let authSubscription = null;
     let loadRequestId = 0;
+    let unmounted = false;
 
     async function loadUserData(user) {
         const requestId = ++loadRequestId;
@@ -41,6 +42,7 @@ export function createAuthModule({ client, onAuthenticated, onSignedOut, pageErr
                 profileError.value = error.code === 'PGRST116'
                     ? 'Akun ini belum memiliki profil. Periksa trigger profiles dan buat ulang akun bila diperlukan.'
                     : readableError(error, 'Profil tidak dapat dimuat.');
+                onSignedOut();
                 return;
             }
 
@@ -49,6 +51,7 @@ export function createAuthModule({ client, onAuthenticated, onSignedOut, pageErr
         } catch (error) {
             if (requestId === loadRequestId) {
                 profileError.value = readableError(error, 'Profil tidak dapat dimuat. Periksa koneksi internet Anda.');
+                onSignedOut();
             }
         } finally {
             if (requestId === loadRequestId) authLoading.value = false;
@@ -57,23 +60,39 @@ export function createAuthModule({ client, onAuthenticated, onSignedOut, pageErr
 
     async function submitAuth() {
         if (!client) return;
-        authSubmitting.value = true;
         authError.value = '';
         authNotice.value = '';
 
+        const { fullName, email, password } = authForm.value;
+        if (!email.trim() || !password) {
+            authError.value = 'Email dan kata sandi wajib diisi.';
+            return;
+        }
+        if (authMode.value === 'register') {
+            if (!fullName.trim()) {
+                authError.value = 'Nama lengkap wajib diisi.';
+                return;
+            }
+            if (password.length < 6) {
+                authError.value = 'Kata sandi minimal 6 karakter.';
+                return;
+            }
+        }
+
+        authSubmitting.value = true;
         try {
             if (authMode.value === 'login') {
                 const { error } = await client.auth.signInWithPassword({
-                    email: authForm.value.email,
-                    password: authForm.value.password
+                    email: email.trim(),
+                    password
                 });
                 if (error) throw error;
                 authNotice.value = 'Berhasil masuk. Dashboard sedang disiapkan...';
             } else {
                 const { data, error } = await client.auth.signUp({
-                    email: authForm.value.email,
-                    password: authForm.value.password,
-                    options: { data: { full_name: authForm.value.fullName } }
+                    email: email.trim(),
+                    password,
+                    options: { data: { full_name: fullName.trim() } }
                 });
                 if (error) throw error;
                 if (!data.session) {
@@ -98,6 +117,7 @@ export function createAuthModule({ client, onAuthenticated, onSignedOut, pageErr
     }
 
     async function logout() {
+        if (!client) return;
         pageError.value = '';
         try {
             const { error } = await client.auth.signOut();
@@ -116,12 +136,14 @@ export function createAuthModule({ client, onAuthenticated, onSignedOut, pageErr
         try {
             const { data, error } = await client.auth.getSession();
             if (error) throw error;
+            if (unmounted) return;
             await loadUserData(data.session?.user || null);
         } catch (error) {
             authError.value = readableError(error, 'Sesi tidak dapat diperiksa.');
             authLoading.value = false;
         }
 
+        if (unmounted) return;
         const { data: authData } = client.auth.onAuthStateChange((_event, session) => {
             const nextUser = session?.user || null;
             if (nextUser && profile.value && nextUser.id === currentUser.value?.id) return;
@@ -131,7 +153,10 @@ export function createAuthModule({ client, onAuthenticated, onSignedOut, pageErr
         authSubscription = authData.subscription;
     });
 
-    onUnmounted(() => authSubscription?.unsubscribe());
+    onUnmounted(() => {
+        unmounted = true;
+        authSubscription?.unsubscribe();
+    });
 
     return {
         authError, authForm, authLoading, authMode, authNotice, authSubmitting,
