@@ -44,6 +44,7 @@ export function createAuthModule({ client, onAuthenticated, onSignedOut, pageErr
             } else {
                 profileError.value = readableError(error, 'Profil tidak dapat dimuat.');
             }
+            onSignedOut();
         } else {
             profile.value = data;
             await onAuthenticated();
@@ -52,10 +53,37 @@ export function createAuthModule({ client, onAuthenticated, onSignedOut, pageErr
         authLoading.value = false;
     }
 
+    // Periksa isian form sebelum dikirim ke Supabase.
+    // Hasilnya true jika form sudah benar.
+    function formValid() {
+        const email = authForm.value.email.trim();
+        const password = authForm.value.password;
+        const fullName = authForm.value.fullName.trim();
+
+        if (!email || !password) {
+            authError.value = 'Email dan kata sandi wajib diisi.';
+            return false;
+        }
+
+        if (authMode.value === 'register') {
+            if (!fullName) {
+                authError.value = 'Nama lengkap wajib diisi.';
+                return false;
+            }
+
+            if (password.length < 6) {
+                authError.value = 'Kata sandi minimal 6 karakter.';
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     // Proses masuk dengan email dan password.
     async function login() {
         const { error } = await client.auth.signInWithPassword({
-            email: authForm.value.email,
+            email: authForm.value.email.trim(),
             password: authForm.value.password
         });
 
@@ -70,10 +98,10 @@ export function createAuthModule({ client, onAuthenticated, onSignedOut, pageErr
     // Proses pendaftaran akun baru.
     async function register() {
         const { data, error } = await client.auth.signUp({
-            email: authForm.value.email,
+            email: authForm.value.email.trim(),
             password: authForm.value.password,
             options: {
-                data: { full_name: authForm.value.fullName }
+                data: { full_name: authForm.value.fullName.trim() }
             }
         });
 
@@ -97,9 +125,13 @@ export function createAuthModule({ client, onAuthenticated, onSignedOut, pageErr
     async function submitAuth() {
         if (!client) return;
 
-        authSubmitting.value = true;
         authError.value = '';
         authNotice.value = '';
+
+        // Berhenti di sini jika form belum lengkap.
+        if (!formValid()) return;
+
+        authSubmitting.value = true;
 
         if (authMode.value === 'login') {
             await login();
@@ -123,6 +155,8 @@ export function createAuthModule({ client, onAuthenticated, onSignedOut, pageErr
     }
 
     async function logout() {
+        if (!client) return;
+
         pageError.value = '';
 
         const { error } = await client.auth.signOut();
