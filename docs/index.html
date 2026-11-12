@@ -375,7 +375,7 @@
             <section class="hero">
                 <p class="eyebrow">PANDUAN PENGEMBANGAN</p>
                 <h1>Belajar Simple Inventory</h1>
-                <p>Dokumentasi ringkas untuk memahami project, menghubungkan Supabase, dan mencoba contoh kode. Tekan tombol <strong>Salin kode</strong> pada blok untuk menyalin contoh.</p>
+                <p>Panduan praktis untuk pelatihan guru: fokus mengikuti langkah, menyalin kode, dan menjalankan mini project. Tidak perlu menguasai seluruh JavaScript dulu. Tekan <strong>Salin kode</strong> pada blok contoh.</p>
                 <div class="pills">
                     <span class="pill">HTML & CSS</span>
                     <span class="pill">Vue 3 Composition API</span>
@@ -389,11 +389,11 @@
                 <p>Aplikasi menggunakan JavaScript module native di browser. Setiap file punya satu tanggung jawab supaya alur program lebih mudah dipresentasikan.</p>
                 <ul class="file-list">
                     <li><code>index.html</code>: struktur halaman dan CDN Vue, Supabase, Bootstrap.</li>
-                    <li><code>style.css</code>: tampilan dashboard dan komponen.</li>
-                    <li><code>app.js</code>: menghubungkan modul dan memasang aplikasi Vue.</li>
-                    <li><code>supabase.js</code>: URL, public key, dan Supabase client.</li>
-                    <li><code>auth.js</code>: login, daftar, sesi, serta profil dan role.</li>
-                    <li><code>inventory.js</code>: mengambil dan mengubah data barang.</li>
+                    <li><code>css/style.css</code>: tampilan dashboard dan komponen.</li>
+                    <li><code>config/supabase.js</code>: URL, public key, dan Supabase client.</li>
+                    <li><code>js/app.js</code>: menghubungkan modul dan memasang aplikasi Vue.</li>
+                    <li><code>js/auth.js</code>: login, daftar, sesi, serta profil dan role.</li>
+                    <li><code>js/inventory.js</code>: mengambil dan mengubah data barang.</li>
                     <li><code>docs/index.html</code>: halaman dokumentasi yang sedang dibuka.</li>
                 </ul>
                 <div class="callout">Contoh di halaman ini adalah potongan pembelajaran. File project yang sudah ada menggabungkan potongan-potongan ini ke dalam modul.</div>
@@ -500,24 +500,46 @@ using (public.current_user_role() = 'admin');</code></pre>
 
             <section class="doc-section" id="konfigurasi">
                 <h2><span class="section-number">3</span>Hubungkan aplikasi ke Supabase</h2>
+                <p>File <code class="inline">config/supabase.js</code> adalah pintu masuk ke backend. Di sini kita menyimpan URL project, public key, membuat client, lalu mengekspornya agar modul lain (<code class="inline">js/auth.js</code>, <code class="inline">js/inventory.js</code>, <code class="inline">js/app.js</code>) bisa memanggil Supabase.</p>
                 <ol>
                     <li>Di dashboard Supabase, buka <strong>Project Settings → API</strong> (atau bagian API keys).</li>
-                    <li>Salin Project URL dan <strong>publishable key</strong> (atau anon key lama).</li>
-                    <li>Ganti nilai contoh pada <code class="inline">supabase.js</code>.</li>
+                    <li>Salin <strong>Project URL</strong> dan <strong>publishable key</strong> (atau anon key lama).</li>
+                    <li>Tempel nilai tersebut ke konstanta di <code class="inline">config/supabase.js</code>, ganti placeholder contoh.</li>
                 </ol>
+                <h3>Kode lengkap <code class="inline">config/supabase.js</code></h3>
                 <div class="code-wrap">
-                    <div class="code-head"><span>JavaScript · supabase.js</span><button class="copy-button" type="button">Salin kode</button></div>
-                    <pre><code>// Publishable/anon key boleh digunakan di browser jika RLS sudah benar.
-// Jangan gunakan service_role key di frontend.
-const SUPABASE_URL = 'https://PROJECT-ID.supabase.co';
-const SUPABASE_ANON_KEY = 'PASTE_PUBLISHABLE_OR_ANON_KEY_HERE';
+                    <div class="code-head"><span>JavaScript · config/supabase.js</span><button class="copy-button" type="button">Salin kode</button></div>
+                    <pre><code>// 1. Koneksi Supabase
+// Gunakan publishable key atau anon key. Jangan pernah gunakan service_role key di browser.
+const SUPABASE_URL = 'https://xohtbhnohaufcksmbomf.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_-6bR7iv7BSJ9rHC-Or6-Hg_TH9gdl_S';
 
-const supabaseClient = window.supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_ANON_KEY
-);</code></pre>
+export const isConfigured = Boolean(
+    SUPABASE_URL.startsWith('https://') &&
+    !SUPABASE_URL.includes('YOUR_') &&
+    SUPABASE_ANON_KEY.length &gt; 20 &&
+    !SUPABASE_ANON_KEY.includes('YOUR_') &&
+    window.supabase?.createClient
+);
+
+export const supabaseClient = isConfigured
+    ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+    : null;
+
+export function readableError(error, fallback) {
+    return error?.message || fallback;
+}</code></pre>
                 </div>
-                <p>Key frontend bukan pengganti akses kontrol. Perlindungan database harus datang dari RLS dan kebijakan yang benar.</p>
+                <h3>Penjelasan bagian demi bagian</h3>
+                <ul>
+                    <li><strong>SUPABASE_URL</strong> — alamat project Anda di cloud Supabase. Formatnya <code class="inline">https://PROJECT-ID.supabase.co</code>.</li>
+                    <li><strong>SUPABASE_ANON_KEY</strong> — publishable/anon key yang aman dipakai di browser <em>hanya jika RLS sudah benar</em>. Jangan pernah menaruh <code class="inline">service_role</code> key di frontend.</li>
+                    <li><strong>isConfigured</strong> — pengecekan cepat: URL valid, key sudah diisi (bukan placeholder), dan library Supabase dari CDN sudah tersedia di <code class="inline">window.supabase</code>. Hasilnya <code class="inline">true</code> atau <code class="inline">false</code>.</li>
+                    <li><strong>supabaseClient</strong> — objek client resmi. Dibuat lewat <code class="inline">createClient()</code> jika konfigurasi lengkap; jika belum, nilainya <code class="inline">null</code> agar aplikasi tidak langsung error mentah.</li>
+                    <li><strong>readableError()</strong> — helper kecil untuk mengambil pesan error dari Supabase, atau teks cadangan jika pesan kosong. Dipakai di modul auth dan inventaris.</li>
+                </ul>
+                <div class="callout">CDN Supabase harus dimuat dulu di <code class="inline">index.html</code> sebelum modul ini dijalankan. Tanpa <code class="inline">window.supabase</code>, <code class="inline">isConfigured</code> akan <code class="inline">false</code> dan client tidak dibuat.</div>
+                <div class="callout warning"><strong>Penting:</strong> Key frontend bukan pengganti akses kontrol. Perlindungan database harus datang dari RLS dan kebijakan yang benar.</div>
             </section>
 
             <section class="doc-section" id="autentikasi">
@@ -568,23 +590,131 @@ if (logoutError) console.error('Logout gagal:', logoutError.message);</code></pr
 
             <section class="doc-section" id="crud">
                 <h2><span class="section-number">5</span>Contoh CRUD inventaris</h2>
-                <p>Semua operasi database menggunakan <code class="inline">async/await</code>. RLS tetap memeriksa role saat request sampai ke Supabase.</p>
-                <h3>Read: membaca barang</h3>
-                <div class="code-wrap">
-                    <div class="code-head"><span>JavaScript · SELECT</span><button class="copy-button" type="button">Salin kode</button></div>
-                    <pre><code>async function loadItems() {
-    const { data, error } = await supabaseClient
-        .from('items')
-        .select('id, name, category, stock, unit, created_at')
-        .order('created_at', { ascending: false });
+                <p>Semua operasi database menggunakan <code class="inline">async/await</code>. RLS tetap memeriksa role saat request sampai ke Supabase. Sebelum fungsi CRUD, <code class="inline">inventory.js</code> menyiapkan state, filter, dan ringkasan.</p>
 
-    if (error) {
-        console.error('Gagal memuat barang:', error.message);
-        return [];
-    }
-    return data;
+                <h3>Siapkan modul inventaris</h3>
+                <p>Bagagian awal file membuat modul Vue: state reaktif untuk daftar barang, form, modal, plus <code class="inline">computed</code> untuk pencarian dan ringkasan. Kita pecah pelan-pelan.</p>
+
+                <h3>1. Import dan kerangka modul</h3>
+                <p><code class="inline">readableError</code> dipakai untuk pesan error yang ramah. Fungsi modul menerima <code class="inline">client</code> (Supabase) dan <code class="inline">isAdmin</code> dari luar, lalu mengambil <code class="inline">ref</code> dan <code class="inline">computed</code> dari Vue CDN.</p>
+                <div class="code-wrap">
+                    <div class="code-head"><span>JavaScript · inventory.js · kerangka</span><button class="copy-button" type="button">Salin kode</button></div>
+                    <pre><code>// 3. Data inventaris, pencarian, ringkasan, dan operasi CRUD
+import { readableError } from '../config/supabase.js';
+
+export function createInventoryModule({ client, isAdmin }) {
+    const { ref, computed } = Vue;</code></pre>
+                </div>
+
+                <h3>2. State reaktif</h3>
+                <p>Semua data yang berubah di UI disimpan dengan <code class="inline">ref()</code>: daftar barang, status loading/error, filter pencarian, modal form, dan status simpan/hapus.</p>
+                <div class="code-wrap">
+                    <div class="code-head"><span>JavaScript · inventory.js · state</span><button class="copy-button" type="button">Salin kode</button></div>
+                    <pre><code>const pageError = ref('');
+const items = ref([]);
+const itemsLoading = ref(false);
+const itemsError = ref('');
+const searchQuery = ref('');
+const selectedCategory = ref('');
+const showItemModal = ref(false);
+const editingItem = ref(null);
+const savingItem = ref(false);
+const deletingId = ref('');
+const formError = ref('');
+const itemForm = ref({ name: '', category: '', stock: 0, unit: '' });</code></pre>
+                </div>
+                <ul>
+                    <li><strong>items</strong> — data mentah dari database.</li>
+                    <li><strong>searchQuery / selectedCategory</strong> — input filter di UI.</li>
+                    <li><strong>showItemModal / editingItem / itemForm</strong> — mengontrol modal tambah/ubah.</li>
+                    <li><strong>savingItem / deletingId</strong> — mencegah double-click saat request berjalan.</li>
+                </ul>
+
+                <h3>3. Kategori dan filter daftar</h3>
+                <p><code class="inline">categories</code> mengambil kategori unik dari data. <code class="inline">filteredItems</code> menyaring daftar berdasarkan nama dan kategori yang dipilih.</p>
+                <div class="code-wrap">
+                    <div class="code-head"><span>JavaScript · inventory.js · filter</span><button class="copy-button" type="button">Salin kode</button></div>
+                    <pre><code>const categories = computed(() =>
+    [...new Set(items.value.map((item) => item.category).filter(Boolean))]
+        .sort((first, second) => first.localeCompare(second, 'id'))
+);
+const filteredItems = computed(() => {
+    const query = searchQuery.value.toLocaleLowerCase('id');
+    return items.value.filter((item) => {
+        const matchesName = !query || item.name.toLocaleLowerCase('id').includes(query);
+        const matchesCategory = !selectedCategory.value || item.category === selectedCategory.value;
+        return matchesName && matchesCategory;
+    });
+});</code></pre>
+                </div>
+                <ul>
+                    <li><strong>Set + filter(Boolean)</strong> — buang duplikat dan nilai kosong.</li>
+                    <li><strong>localeCompare(..., 'id')</strong> — urutan alfabet sesuai bahasa Indonesia.</li>
+                    <li><strong>matchesName / matchesCategory</strong> — barang tampil jika cocok keduanya.</li>
+                </ul>
+
+                <h3>4. Ringkasan dashboard dan clear</h3>
+                <p>Angka ringkasan dihitung otomatis dari <code class="inline">items</code>. <code class="inline">clearItems()</code> mengosongkan data, misalnya saat logout.</p>
+                <div class="code-wrap">
+                    <div class="code-head"><span>JavaScript · inventory.js · ringkasan</span><button class="copy-button" type="button">Salin kode</button></div>
+                    <pre><code>const totalItems = computed(() => items.value.length);
+const totalCategories = computed(() => categories.value.length);
+const totalStock = computed(() =>
+    items.value.reduce((total, item) => total + Number(item.stock || 0), 0)
+);
+const lowStockItems = computed(() =>
+    items.value.filter((item) => Number(item.stock) &lt;= 5).length
+);
+
+function clearItems() {
+    items.value = [];
+    itemsError.value = '';
 }</code></pre>
                 </div>
+                <ul>
+                    <li><strong>totalItems / totalCategories / totalStock</strong> — isi kartu statistik.</li>
+                    <li><strong>lowStockItems</strong> — hitung barang dengan stok ≤ 5.</li>
+                    <li><strong>clearItems()</strong> — reset daftar dan pesan error.</li>
+                </ul>
+                <div class="callout">Setelah setup ini siap, baru fungsi CRUD seperti <code class="inline">loadItems()</code> mengisi <code class="inline">items</code>. UI memakai <code class="inline">filteredItems</code> dan angka ringkasan secara otomatis.</div>
+
+                <h3>Read: membaca barang</h3>
+                <p>Fungsi <code class="inline">loadItems()</code> di <code class="inline">inventory.js</code> mengambil daftar barang dari tabel <code class="inline">items</code>. Hasilnya disimpan ke state Vue (<code class="inline">items</code>) agar tampilan ikut terbarui.</p>
+                <div class="code-wrap">
+                    <div class="code-head"><span>JavaScript · inventory.js · loadItems</span><button class="copy-button" type="button">Salin kode</button></div>
+                    <pre><code>async function loadItems() {
+    if (!client) return;
+    itemsLoading.value = true;
+    itemsError.value = '';
+
+    try {
+        const { data, error } = await client
+            .from('items')
+            .select('id, name, category, stock, unit, created_at')
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        items.value = data || [];
+    } catch (error) {
+        itemsError.value = readableError(error, 'Data inventaris tidak dapat dimuat.');
+        items.value = [];
+    } finally {
+        itemsLoading.value = false;
+    }
+}</code></pre>
+                </div>
+                <h3>Penjelasan bagian demi bagian</h3>
+                <ul>
+                    <li><strong>if (!client) return</strong> — jika Supabase client belum siap, fungsi langsung berhenti.</li>
+                    <li><strong>itemsLoading / itemsError</strong> — menandai proses loading dan mengosongkan error lama sebelum request baru.</li>
+                    <li><strong>.from('items')</strong> — memilih tabel <code class="inline">items</code>.</li>
+                    <li><strong>.select(...)</strong> — mengambil kolom yang dibutuhkan saja, bukan seluruh kolom sembarangan.</li>
+                    <li><strong>.order('created_at', { ascending: false })</strong> — menampilkan barang terbaru di atas.</li>
+                    <li><strong>items.value = data || []</strong> — menyimpan hasil ke state; jika data kosong, pakai array kosong.</li>
+                    <li><strong>catch + readableError</strong> — mengubah error Supabase menjadi pesan yang bisa ditampilkan ke user.</li>
+                    <li><strong>finally</strong> — selalu mematikan status loading, sukses maupun gagal.</li>
+                </ul>
+                <div class="callout">Di project, <code class="inline">client</code> adalah <code class="inline">supabaseClient</code> yang dikirim ke modul inventaris. RLS memastikan hanya user yang sudah login yang boleh membaca data.</div>
                 <h3>Create: menambahkan barang</h3>
                 <div class="code-wrap">
                     <div class="code-head"><span>JavaScript · INSERT (khusus admin)</span><button class="copy-button" type="button">Salin kode</button></div>
@@ -684,7 +814,7 @@ where id = (
                     <div class="step"><strong>2 · Live Server</strong>Klik kanan <code class="inline">index.html</code> → Open with Live Server.</div>
                     <div class="step"><strong>3 · Dokumentasi</strong>Buka <code class="inline">docs/index.html</code> melalui Live Server untuk membaca panduan ini.</div>
                 </div>
-                <p>Live Server penting karena browser memuat <code class="inline">app.js</code> dan modul JavaScript lain menggunakan <code class="inline">import</code>. Membuka aplikasi sebagai file lokal (<code class="inline">file://</code>) dapat memblokir module imports.</p>
+                <p>Live Server penting karena browser memuat <code class="inline">js/app.js</code> dan modul JavaScript lain menggunakan <code class="inline">import</code>. Membuka aplikasi sebagai file lokal (<code class="inline">file://</code>) dapat memblokir module imports.</p>
             </section>
 
             <section class="doc-section" id="masalah">
